@@ -9,6 +9,7 @@ type Lexer struct {
 	position     int
 	readPosition int
 	ch           byte
+	line         int
 }
 
 func (l *Lexer) peekChar() byte {
@@ -31,7 +32,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = string(l.ch) + string(char)
 			l.readChar()
 		} else {
-			tok = newToken(token.ASSIGN, l.ch)
+			tok = newToken(token.ASSIGN, l.ch, l.line)
 		}
 	case '!':
 		char := l.peekChar()
@@ -40,32 +41,32 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = string(l.ch) + string(char)
 			l.readChar()
 		} else {
-			tok = newToken(token.BANG, l.ch)
+			tok = newToken(token.BANG, l.ch, l.line)
 		}
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = newToken(token.PLUS, l.ch, l.line)
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = newToken(token.LPAREN, l.ch, l.line)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = newToken(token.RPAREN, l.ch, l.line)
 	case '{':
-		tok = newToken(token.LBRACE, l.ch)
+		tok = newToken(token.LBRACE, l.ch, l.line)
 	case '}':
-		tok = newToken(token.RBRACE, l.ch)
+		tok = newToken(token.RBRACE, l.ch, l.line)
 	case ',':
-		tok = newToken(token.COMMA, l.ch)
+		tok = newToken(token.COMMA, l.ch, l.line)
 	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
+		tok = newToken(token.SEMICOLON, l.ch, l.line)
 	case '/':
-		tok = newToken(token.SLASH, l.ch)
+		tok = newToken(token.SLASH, l.ch, l.line)
 	case '-':
-		tok = newToken(token.MINUS, l.ch)
+		tok = newToken(token.MINUS, l.ch, l.line)
 	case '*':
-		tok = newToken(token.ASTERISK, l.ch)
+		tok = newToken(token.ASTERISK, l.ch, l.line)
 	case '<':
-		tok = newToken(token.LT, l.ch)
+		tok = newToken(token.LT, l.ch, l.line)
 	case '>':
-		tok = newToken(token.GT, l.ch)
+		tok = newToken(token.GT, l.ch, l.line)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -79,7 +80,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.INT
 			return tok
 		} else {
-			newToken(token.ILLEGAL, l.ch)
+			newToken(token.ILLEGAL, l.ch, l.line)
 		}
 	}
 	l.readChar()
@@ -100,6 +101,9 @@ func isDigit(ch byte) bool {
 
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		if l.ch == '\n' {
+			l.line++
+		}
 		l.readChar()
 	}
 }
@@ -116,8 +120,8 @@ func isLetter(b byte) bool {
 	return (b >= 'a' && b <= 'z') || ('A' <= b && b <= 'Z') || b == '_'
 }
 
-func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
+func newToken(tokenType token.TokenType, ch byte, line int) token.Token {
+	return token.Token{Type: tokenType, Literal: string(ch), LineNo: line}
 }
 
 func New(input string) *Lexer {
